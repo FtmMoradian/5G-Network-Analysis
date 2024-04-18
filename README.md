@@ -7,5 +7,5 @@ The dataset project is "Quality of Service 5G" which we downloaded from kaggle w
 # تحلیل شبکه 5G
 در این پروژه تحلیل اطلاعات در مورد شبکه 5G را در نظر گرفته ایم . پهنای باند اپلیکیشن های مختلف را در بازه های زمانی 10تا 10:06 بررسی کرده ایم و متوجه شدیم بیشترین پهنای باند برای کدام کاربر و کدام اپلیکیشن است ،بیشترین تاخیر برای کدام اپلیکیشن است و...
 
-#دیتاست
+# دیتاست
 دیتاست مورد نظر ما برای انجام این پروژه دیتاست" Quality of Service 5G" است که از سایت کگل دانلود کرده ایم ونوع دیتاست ما از نوع csv است که توسط omar sobhy انتشار یافته .دیتاهای موجود در این فایل Timestamp ,User_ID , Application_Type ,Signal_Strength , Latency , Required_Bandwidth , Allocated_Bandwidth , Resource_Allocation است .این اطلاعات در طی 7 دقیقه از بین ساعت 10تا 10:06 ثبت شده است.
