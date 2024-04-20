@@ -23,6 +23,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 warnings.filterwarnings('ignore')
+from sklearn import preprocessing
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+label_encoder = LabelEncoder()
 
 """Load DataSet"""
 
@@ -309,4 +312,186 @@ plt.xlabel('Required Bandwidth')
 plt.ylabel('Allocated Bandwidth')
 plt.grid(True)
 plt.show()
+
+correlation_coefficient = data['Allocated_Bandwidth'].corr(data['Required_Bandwidth'])
+print(f"Correlation Coefficient: {correlation_coefficient}")
+
+"""Matplotlib"""
+
+data.head()
+
+data.Signal_Strength.plot(kind = 'line', color = 'g',label = 'Signal_Strength',linewidth=1,alpha = 0.5,grid = True,linestyle = ':')
+data.Latency.plot(color = 'r',label = 'Latency',linewidth=1, alpha = 0.5,grid = True,linestyle = '-.')
+plt.legend(loc='upper right')
+plt.xlabel('x axis')
+plt.ylabel('y axis')
+plt.title('Line Plot')
+plt.show()
+
+data.plot(kind='scatter', x='Signal_Strength', y='Latency',alpha = 0.5,color = 'red')
+plt.xlabel('Signal Strength')
+plt.ylabel('Latency')
+plt.title('Signal Strength vs Latency Scatter Plot')
+
+data.Signal_Strength.plot(kind = 'hist',bins = 50,figsize = (8,8))
+plt.show()
+
+x = data['Signal_Strength']>20
+data[x]
+
+data[np.logical_and(data['Signal_Strength']>20, data['Latency']<10 )]
+
+i = 0
+while i != 5 :
+    print('i is: ',i)
+    i +=1
+print(i,' is equal to 5')
+
+lis = [1,2,3,4,5]
+for i in lis:
+    print('i is: ',i)
+print('')
+
+for index, value in enumerate(lis):
+    print(index," : ",value)
+print('')
+
+dictionary = {'spain':'madrid','france':'paris'}
+for key,value in dictionary.items():
+    print(key," : ",value)
+print('')
+
+for index,value in data[['Signal_Strength']][0:10].iterrows():
+    print(index," : ",value)
+
+x = 2
+def f():
+    x = 3
+    return x
+print(x)
+print(f())
+
+""" Signal scope"""
+
+x = 5
+def f():
+    y = 2*x
+    return y
+print(f())
+
+def square():
+    """ return square of value """
+    def add():
+        """ add two local variable """
+        x = 2
+        y = 3
+        z = x + y
+        return z
+    return add()**2
+print(square())
+
+square = lambda x: x**2
+print(square(4))
+tot = lambda x,y,z: x+y+z
+print(tot(1,2,3))
+
+name = "AMCT 2023-2024"
+it = iter(name)
+print(next(it))
+print(next(it))
+print(next(it))
+print(*it)
+
+num1 = [1,2,3]
+num2 = [i + 1 for i in num1]
+print(num2)
+
+num1 = [5,10,15]
+num2 = [i**2 if i == 10 else i-5 if i < 7 else i+5 for i in num1]
+print(num2)
+
+threshold = sum(data.Signal_Strength)/len(data.Signal_Strength)
+data["Signal Strength Level"] = ["high" if i > threshold else "low" for i in data.Signal_Strength]
+
+data.head()
+
+data.loc[:10,["Signal Strength Level","Signal_Strength"]]
+
+sns.barplot(x="Resource_Allocation", y="Signal Strength Level", hue="Application_Type", data=data);
+
+sns.pointplot(x="Resource_Allocation", y="Signal Strength Level", hue="Application_Type", data=data);
+
+data_new = data
+data_new['Application_Type'] = label_encoder.fit_transform(data_new['Application_Type'])
+
+data_new.head()
+
+data_new['Signal Strength Level'] = label_encoder.fit_transform(data_new['Signal Strength Level'])
+data_new['Timestamp'] = label_encoder.fit_transform(data_new['Timestamp'])
+data_new['User_ID'] = label_encoder.fit_transform(data_new['User_ID'])
+
+data_new.head()
+
+enc = OneHotEncoder(drop='first')
+data_new2 = data
+enc_app = pd.DataFrame(enc.fit_transform(data[['Application_Type']]).toarray())
+data_new2 = data_new2.join(enc_app)
+
+data_new2.head()
+
+data_new2.drop(data_new2.iloc[:, 9:], inplace=True, axis=1)
+
+"""Split Train and Test"""
+
+from sklearn.model_selection import train_test_split
+
+X_all = data_new2.drop(['Signal_Strength', 'Signal Strength Level'], axis=1)
+y_all = data_new2['Signal Strength Level']
+
+num_test = 0.20
+X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=num_test, random_state=23)
+
+"""Random Forest Classifier"""
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import make_scorer, accuracy_score
+from sklearn.model_selection import GridSearchCV
+
+clf = RandomForestClassifier()
+
+parameters = {'n_estimators': [4, 6, 9],
+              'max_features': ['log2', 'sqrt','auto'],
+              'criterion': ['entropy', 'gini'],
+              'max_depth': [2, 3, 5, 10],
+              'min_samples_split': [2, 3, 5],
+              'min_samples_leaf': [1,5,8]
+             }
+
+acc_scorer = make_scorer(accuracy_score)
+
+grid_obj = GridSearchCV(clf, parameters, scoring=acc_scorer)
+grid_obj = grid_obj.fit(X_train, y_train)
+
+clf = grid_obj.best_estimator_
+
+clf.fit(X_train, y_train)
+
+predictions = clf.predict(X_test)
+print(accuracy_score(y_test, predictions))
+
+"""K-Fold Validation"""
+
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+
+k = 5
+kf = KFold(n_splits=k, random_state=None)
+
+result = cross_val_score(clf , X_train, y_train, cv = kf)
+
+print("Avg accuracy: {}".format(result.mean()))
+
+ids = X_test['User_ID']
+output = pd.DataFrame({ 'User_ID' : ids, 'Signal Strength Level': predictions })
+output.head()
 
